@@ -1,5 +1,9 @@
 <div
-    class="mx-auto flex min-h-screen w-full max-w-2xl flex-col px-4 py-8 sm:py-12"
+    @class([
+        'mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pt-5 antialiased sm:pt-8',
+        'pb-28' => $revealed,
+        'pb-10 sm:pb-16' => ! $revealed,
+    ])
     x-data="{
         get revealed() { return $wire.revealed },
         get hasCard() { return @js((bool) $card) },
@@ -11,126 +15,136 @@
     @keydown.window.2="rate('unsure')"
     @keydown.window.3="rate('unknown')"
 >
-    {{-- Header / progress --}}
-    <header class="mb-8 flex items-center justify-between">
-        <h1 class="text-lg font-semibold tracking-tight text-stone-700 dark:text-stone-200">
-            Medikamente lernen
-        </h1>
-        @if ($card)
-            <span class="rounded-full bg-stone-200 px-3 py-1 text-sm font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300">
-                {{ $remaining }} {{ $remaining === 1 ? 'Karte' : 'Karten' }} heute
-            </span>
-        @endif
-    </header>
-
     @if ($card)
-        {{-- Card --}}
+        {{-- Session progress --}}
+        @php
+            $total = $remaining + $answered;
+        @endphp
+        <div class="mb-6 flex justify-end">
+            <span class="rounded-full bg-stone-900 px-2.5 py-1 text-xs font-medium tabular-nums text-white dark:bg-white dark:text-stone-900">
+                {{ $answered + 1 }}/{{ $total }}
+            </span>
+        </div>
+
+        {{-- Card — tinted identity band over a clean body --}}
         <div class="flex flex-1 flex-col" wire:key="card-{{ $card->id }}">
             <article
-                class="flex flex-1 flex-col rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition dark:border-stone-800 dark:bg-stone-900 sm:p-8"
+                class="flex flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-xl shadow-stone-950/5 ring-1 ring-stone-950/5 dark:bg-stone-900 dark:shadow-none dark:ring-white/10"
             >
-                {{-- Drug identity --}}
-                <div class="mb-6 flex flex-wrap items-center gap-2">
+                {{-- Identity band --}}
+                <div class="bg-stone-50 px-6 pt-6 pb-7 dark:bg-stone-950/40">
+                    {{-- Category --}}
                     @if ($card->medicament->wirkstoffgruppe)
-                        <span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                        <p class="text-xs font-semibold tracking-wide text-stone-400 uppercase dark:text-stone-500">
                             {{ $card->medicament->wirkstoffgruppe }}
-                        </span>
+                        </p>
                     @endif
-                    @foreach (($card->medicament->handelsnamen ?? []) as $brand)
-                        <span class="rounded-full border border-stone-200 px-2.5 py-0.5 text-xs text-stone-500 dark:border-stone-700 dark:text-stone-400">
-                            {{ $brand }}
-                        </span>
-                    @endforeach
-                </div>
 
-                {{-- Drug name + the section question --}}
-                <div class="mb-6">
-                    <h2 class="text-3xl font-bold tracking-tight text-stone-900 dark:text-white sm:text-4xl">
+                    {{-- Title --}}
+                    <h2 class="mt-4 text-pretty text-4xl font-semibold tracking-tight break-words hyphens-auto text-stone-900 sm:text-5xl dark:text-white">
                         {{ $card->medicament->name }}
                     </h2>
-                    <p class="mt-2 text-lg font-medium text-stone-500 dark:text-stone-400">
+
+                    {{-- Product pills --}}
+                    @if ($card->medicament->handelsnamen)
+                        <div class="mt-3 flex flex-wrap gap-1.5">
+                            @foreach ($card->medicament->handelsnamen as $brand)
+                                <span class="rounded-full bg-stone-900 px-2.5 py-1 text-xs font-medium text-white dark:bg-white dark:text-stone-900">
+                                    {{ $brand }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Body --}}
+                <div class="flex flex-1 flex-col px-6 pt-7 pb-7">
+                    {{-- Question --}}
+                    <p class="text-pretty text-3xl font-medium tracking-tight break-words hyphens-auto text-stone-800 dark:text-stone-200">
                         {{ $card->sectionLabel() }}?
                     </p>
-                </div>
 
-                {{-- Answer (back) --}}
-                @if ($revealed)
-                    <div class="prose-section mt-2 flex-1 border-t border-stone-100 pt-6 text-stone-700 dark:border-stone-800 dark:text-stone-300">
-                        {!! $card->medicament->{$card->section_key} !!}
-                    </div>
-                @else
-                    <div class="flex flex-1 items-center justify-center py-10">
-                        <button
-                            type="button"
-                            wire:click="reveal"
-                            class="rounded-xl bg-stone-900 px-8 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-stone-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
-                        >
-                            Aufdecken
-                            <span class="ml-2 text-xs font-normal opacity-60">Leertaste</span>
-                        </button>
-                    </div>
-                @endif
+                    @if ($revealed)
+                        <div class="prose-section mt-7 flex-1 border-t border-stone-950/5 pt-7 text-base text-stone-700 dark:border-white/5 dark:text-stone-300">
+                            {!! $card->medicament->{$card->section_key} !!}
+                        </div>
+                    @else
+                        <div class="flex flex-1 items-center justify-center py-12">
+                            <button
+                                type="button"
+                                wire:click="reveal"
+                                class="flex items-center gap-2 rounded-lg bg-stone-100 py-3 pr-4 pl-3.5 text-base font-semibold text-stone-700 transition-colors hover:bg-stone-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-500 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
+                            >
+                                <svg class="size-5 shrink-0 fill-stone-500 dark:fill-stone-400" viewBox="0 0 20 20" aria-hidden="true">
+                                    <path d="M10 4c-3.6 0-6.7 2.1-8.2 5.2a.9.9 0 0 0 0 .8C3.3 13.9 6.4 16 10 16s6.7-2.1 8.2-5.2a.9.9 0 0 0 0-.8C16.7 6.1 13.6 4 10 4Zm0 9.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm0-5.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
+                                </svg>
+                                Aufdecken
+                            </button>
+                        </div>
+                    @endif
+                </div>
             </article>
-
-            {{-- Rating buttons --}}
-            @if ($revealed)
-                <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <button
-                        type="button"
-                        wire:click="rate('know')"
-                        class="flex flex-col items-center justify-center rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-4 font-semibold text-emerald-800 transition hover:border-emerald-400 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300"
-                    >
-                        <span class="text-base">Kann ich</span>
-                        <span class="mt-0.5 text-xs font-normal opacity-60">Taste 1</span>
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="rate('unsure')"
-                        class="flex flex-col items-center justify-center rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-4 font-semibold text-amber-800 transition hover:border-amber-400 hover:bg-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300"
-                    >
-                        <span class="text-base">Unsicher</span>
-                        <span class="mt-0.5 text-xs font-normal opacity-60">Taste 2</span>
-                    </button>
-                    <button
-                        type="button"
-                        wire:click="rate('unknown')"
-                        class="flex flex-col items-center justify-center rounded-xl border-2 border-rose-200 bg-rose-50 px-4 py-4 font-semibold text-rose-800 transition hover:border-rose-400 hover:bg-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300"
-                    >
-                        <span class="text-base">Gar nicht</span>
-                        <span class="mt-0.5 text-xs font-normal opacity-60">Taste 3</span>
-                    </button>
-                </div>
-            @endif
         </div>
+
+        {{-- Rating controls — sticky bottom bar --}}
+        @if ($revealed)
+            <div class="fixed inset-x-0 bottom-0 z-10 grid grid-cols-3 border-t border-stone-950/10 bg-white/80 backdrop-blur pb-[env(safe-area-inset-bottom)] dark:border-white/10 dark:bg-stone-950/80">
+                <button
+                    type="button"
+                    wire:click="rate('know')"
+                    class="py-5 text-base font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                >
+                    Kann ich
+                </button>
+                <button
+                    type="button"
+                    wire:click="rate('unsure')"
+                    class="border-x border-stone-950/10 py-5 text-base font-semibold text-amber-700 transition-colors hover:bg-amber-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-amber-500 dark:border-white/10 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                >
+                    Unsicher
+                </button>
+                <button
+                    type="button"
+                    wire:click="rate('unknown')"
+                    class="py-5 text-base font-semibold text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-rose-500 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                >
+                    Gar nicht
+                </button>
+            </div>
+        @endif
     @else
         {{-- Session complete --}}
         <div class="flex flex-1 flex-col items-center justify-center text-center">
-            <div class="rounded-2xl border border-stone-200 bg-white p-10 shadow-sm dark:border-stone-800 dark:bg-stone-900">
-                <div class="mb-2 text-4xl">✓</div>
-                <h2 class="text-2xl font-bold text-stone-900 dark:text-white">
+            <div class="w-full rounded-xl bg-white p-10 shadow-xl shadow-stone-950/5 ring-1 ring-stone-950/5 dark:bg-stone-900 dark:shadow-none dark:ring-white/10">
+                <div class="mx-auto flex size-14 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-600/15 dark:bg-emerald-950/40 dark:ring-emerald-400/15">
+                    <svg class="size-6 fill-emerald-600 dark:fill-emerald-400" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M20.03 6.97a.75.75 0 0 1 0 1.06l-9.5 9.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.97 3.97 8.97-8.97a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <h1 class="mt-6 text-2xl font-semibold tracking-tight text-stone-900 dark:text-white">
                     Sitzung abgeschlossen
-                </h2>
-                <p class="mt-2 text-stone-500 dark:text-stone-400">
+                </h1>
+                <p class="mx-auto mt-2 max-w-[40ch] text-pretty text-stone-500 dark:text-stone-400">
                     @if ($answered > 0)
-                        {{ $answered }} {{ $answered === 1 ? 'Karte' : 'Karten' }} bearbeitet.
+                        Du hast {{ $answered }} {{ $answered === 1 ? 'Karte' : 'Karten' }} bearbeitet. Gut gemacht.
                     @else
-                        Aktuell sind keine Karten fällig.
+                        Aktuell sind keine Karten fällig — schau später wieder vorbei.
                     @endif
                 </p>
 
                 @if ($answered > 0)
-                    <dl class="mt-6 grid grid-cols-3 gap-4 text-sm">
-                        <div class="rounded-lg bg-emerald-50 px-3 py-3 dark:bg-emerald-950/50">
-                            <dt class="text-emerald-700 dark:text-emerald-300">Kann ich</dt>
-                            <dd class="mt-1 text-2xl font-bold text-emerald-800 dark:text-emerald-200">{{ $tally['know'] }}</dd>
+                    <dl class="mt-8 grid grid-cols-3">
+                        <div class="px-3">
+                            <dd class="text-3xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{{ $tally['know'] }}</dd>
+                            <dt class="mt-1 text-sm text-stone-500 dark:text-stone-400">Kann ich</dt>
                         </div>
-                        <div class="rounded-lg bg-amber-50 px-3 py-3 dark:bg-amber-950/50">
-                            <dt class="text-amber-700 dark:text-amber-300">Unsicher</dt>
-                            <dd class="mt-1 text-2xl font-bold text-amber-800 dark:text-amber-200">{{ $tally['unsure'] }}</dd>
+                        <div class="border-x border-stone-950/5 px-3 dark:border-white/10">
+                            <dd class="text-3xl font-semibold tabular-nums text-amber-600 dark:text-amber-400">{{ $tally['unsure'] }}</dd>
+                            <dt class="mt-1 text-sm text-stone-500 dark:text-stone-400">Unsicher</dt>
                         </div>
-                        <div class="rounded-lg bg-rose-50 px-3 py-3 dark:bg-rose-950/50">
-                            <dt class="text-rose-700 dark:text-rose-300">Gar nicht</dt>
-                            <dd class="mt-1 text-2xl font-bold text-rose-800 dark:text-rose-200">{{ $tally['unknown'] }}</dd>
+                        <div class="px-3">
+                            <dd class="text-3xl font-semibold tabular-nums text-rose-600 dark:text-rose-400">{{ $tally['unknown'] }}</dd>
+                            <dt class="mt-1 text-sm text-stone-500 dark:text-stone-400">Gar nicht</dt>
                         </div>
                     </dl>
                 @endif
@@ -138,7 +152,7 @@
                 <button
                     type="button"
                     wire:click="restart"
-                    class="mt-8 rounded-xl bg-stone-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+                    class="mt-9 rounded-lg bg-stone-900 px-6 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-500 active:scale-100 dark:bg-white dark:text-stone-900"
                 >
                     Alle Karten neu lernen
                 </button>

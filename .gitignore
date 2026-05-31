@@ -2,7 +2,6 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
-/public/build
 /public/hot
 /public/storage
 /storage/*.key
@@ -32,7 +31,12 @@ yarn-error.log
 
 # Claude Code local settings
 /.claude/settings.local.json
+/.claude/scheduled_tasks.lock
+
+# Vite dev-only fonts manifest (the build emits public/build/fonts-manifest.json)
+/public/fonts-manifest.dev.json
 
 # Source material (PDF, prompts, canonical markdown). The app's own copy of
 # the medicament markdown lives in database/data/medikamente/.
 /.data
+INSTALL.txt

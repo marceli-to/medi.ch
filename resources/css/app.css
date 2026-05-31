@@ -7,3 +7,63 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Styles the rendered HTML of a medicament section (the flashcard back). */
+@utility prose-section {
+    line-height: 1.65;
+
+    & p {
+        text-wrap: pretty;
+    }
+
+    & p + p,
+    & ul + p,
+    & ol + p,
+    & p + ul,
+    & p + ol {
+        margin-top: --spacing(4);
+    }
+
+    & ul,
+    & ol {
+        margin-block: --spacing(2);
+        padding-left: --spacing(5);
+        display: flex;
+        flex-direction: column;
+        gap: --spacing(1.5);
+    }
+
+    & ul {
+        list-style-type: disc;
+    }
+
+    & ol {
+        list-style-type: decimal;
+    }
+
+    & li::marker {
+        color: var(--color-stone-400);
+    }
+
+    & strong {
+        font-weight: 600;
+        color: var(--color-stone-900);
+    }
+
+    & a {
+        color: var(--color-stone-900);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    @variant dark {
+        & strong,
+        & a {
+            color: var(--color-white);
+        }
+
+        & li::marker {
+            color: var(--color-stone-600);
+        }
+    }
+}
