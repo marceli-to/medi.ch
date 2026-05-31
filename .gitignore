@@ -32,3 +32,7 @@ yarn-error.log
 
 # Claude Code local settings
 /.claude/settings.local.json
+
+# Source material (PDF, prompts, canonical markdown). The app's own copy of
+# the medicament markdown lives in database/data/medikamente/.
+/.data
